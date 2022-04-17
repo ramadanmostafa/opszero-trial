@@ -1,0 +1,45 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: myconfig
+  namespace: default
+data:
+  DB_PRIMARY_HOST: "db1.host.rds"
+  DB_PRIMARY_PORT: "5432"
+  DB_PRIMARY_USERNAME: "postgres"
+  DB_PRIMARY_NAME: "canal_prod"
+
+  DB_SECONDARY_HOST: "db2.host.rds"
+  DB_SECONDARY_PORT: "5432"
+  DB_SECONDARY_USERNAME: "postgres"
+---
+apiVersion: v1
+stringData:
+  DB_PRIMARY_PASSWORD: "postgres" # should be encrypted
+  DB_SECONDARY_PASSWORD: "postgres" # should be encrypted
+kind: Secret
+metadata:
+  name: mysecret
+  namespace: default
+---
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: mycronjob
+  namespace: default
+spec:
+  schedule: "0 0 * * *" # daily at midnight
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          containers:
+          - name: copy-db
+            image: syncdb:latest # the image from the provided Dockerfile. i assumed it's available on a docker repo
+            imagePullPolicy: IfNotPresent
+            envFrom:
+              - configMapRef:
+                  name: myconfig
+              - secretRef:
+                  name: mysecret
+          restartPolicy: OnFailure
