@@ -1,7 +1,8 @@
 import os
-from subprocess import PIPE,Popen
 import shlex
 from datetime import datetime
+from subprocess import PIPE, Popen
+
 
 DB_PRIMARY_HOST = os.environ['DB_PRIMARY_HOST']
 DB_PRIMARY_PORT = os.environ['DB_PRIMARY_PORT']
@@ -23,6 +24,7 @@ def dump_table(host, database, user, password, port):
 
     return p.communicate(bytearray(f'{password}\n', 'utf-8'))
 
+
 def restore_table(host,database,user,password, port):
 
     command = f'pg_restore -h {host} -d {database} -U {user} -p {port} /tmp/table.dmp'
@@ -32,6 +34,7 @@ def restore_table(host,database,user,password, port):
     p = Popen(command,shell=False,stdin=PIPE,stdout=PIPE,stderr=PIPE)
 
     return p.communicate(bytearray(f'{password}\n', 'utf-8'))
+
 
 def main():
     dump_table(
